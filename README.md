@@ -26,7 +26,7 @@ FFT spectrum of 1KHz-10dB_44100Hz_400ms-TwoTube_stereo.wav. There are 2nd harmon
 ![figure_input1](doc/spectrum_FFT4096Hanning_TwoTube_1KHz_wav.png)  
   
 BPF_analysis1.py output. Dark white line in the mid area shows 2nd harmonic(2KHz). Bright white line shows 1KHz.  
-Start wave pattern is a filter transient response.  
+Start wave pattern is filter transient response.  
 ![figure_input2](doc/BPF_analysis1_outputFigure_TwoTube_1KHz_wav.png)  
 
 ### Input signal is mix of 400Hz -10dB sin wave and 1KHz -10dB sin wave  
