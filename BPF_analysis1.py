@@ -83,11 +83,17 @@ class Class_Analysis1(object):
         
         return rgb_fig
     
-    def plot_image(self,):
+    def plot_image(self, yg=None):
         #
         fig_image= self.conv_gray2RGBgray( self.trans_gray(self.out1))
         # 
-        fig, ax = plt.subplots()
+        if yg is not None:
+            fig,  [ax0, ax] = plt.subplots(2, 1)
+            ax0.plot(yg)
+            ax0.set_xlim(0, len(yg))
+        else:
+            fig, ax = plt.subplots()
+        
         ax.set_title('BPF bank analysis Spectrogram')
         ax.set_xlabel('time step [sec]')
         ax.set_ylabel('frequecny [Hz]')
@@ -108,7 +114,7 @@ class Class_Analysis1(object):
         ax.set_yticks( yflens )
         ax.set_yticklabels( char_flens)
         
-        ax.imshow( fig_image, origin='lower')
+        ax.imshow( fig_image, aspect='auto', origin='lower')
         
         plt.tight_layout()
         plt.show()
@@ -160,3 +166,4 @@ if __name__ == '__main__':
     
     # draw image
     Ana1.plot_image()
+    #Ana1.plot_image(yg)
