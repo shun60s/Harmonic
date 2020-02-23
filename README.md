@@ -44,7 +44,7 @@ BPF_analysis1.py output. Dark white lines show 600Hz, 1400Hz, and 2KHz.
 A music spectrogram comparison of input and output of Tube Amplifier (PC simulation).  
 
 Matching portion (red rectangle area) in the template spectrogram  to compare.  
-Set diagonal position by pointing-device mouse and figure exist. Matching portion in the matching spectrogram will be detected by cv2.matchTemplate function.  
+Set diagonal position by pointing-device mouse and exist figure. Matching portion in the matching spectrogram will be detected by cv2.matchTemplate function.  
 ![figure_input5](doc/template.png)  
 
 each matching portion of template spectrogram and matching spectrogram  
