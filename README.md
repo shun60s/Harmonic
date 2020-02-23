@@ -16,6 +16,8 @@
 - ema1.py Exponential Moving Average with Half-wave rectification, and smoothing via lpf
 - iir1.py iir butterworth filter
 - mel.py mel-frequency equal shifted list
+- compare_spectrograms1.py main program, compare matching portion of two spectrograms and show its difference
+- in the wav folder, there are used wav files.  
 
 
 ## analysis of Tube Amplifier Distortion (PC simulation)  
@@ -37,4 +39,16 @@ FFT spectrum of Mix_400Hz1KHz-10dB_44100Hz_400msec_TwoTube_mono.wav.  There are 
 BPF_analysis1.py output. Dark white lines show 600Hz, 1400Hz, and 2KHz.  
 ![figure_input4](doc/BPF_analysis1_outputFigure_TwoTube_400Hz1KHz_MIX_wav.png)  
 
+## Compare matching portion of two spectrograms  
 
+A music spectrogram comparison of input and output of Tube Amplifier (PC simulation).  
+
+Matching portion (red rectangle area) in the template spectrogram  to compare.  
+Set diagonal position by pointing-device mouse and figure exist. Matching portion in the matching spectrogram will be detected by cv2.matchTemplate function.  
+![figure_input5](doc/template.png)  
+
+each matching portion of template spectrogram and matching spectrogram  
+![figure_input6](doc/compare.png)  
+
+matching portion and its difference (red means positive  and blue means negative)    
+![figure_input7](doc/diff.png)  
