@@ -1,6 +1,6 @@
 #coding:utf-8
 
-#  Compare matching portion of two spectrograms and show its difference
+#  Search some similar area near the specified area in Spectrogram
 #
 #  BPF bank analysis Spectrogram of which feature are
 #   BPF's target response is 2nd harmonic level less than -70dB
@@ -23,7 +23,7 @@ import cv2
 from mel  import *
 from BPF4 import *
 from Compressor1 import *
-
+from nms import *
 
 # Check version
 #  Python 3.6.4 on win32 (Windows 10)
@@ -54,6 +54,10 @@ class Class_Analysis1(object):
         # (3) compress via power function
         self.power_index= power_index
         self.comp1= Class_Compressor1(power_index= self.power_index)
+        
+        #
+        self.boxes_previous = None
+        self.boxes_previous_score = None
         
     def compute(self, yg):
         # yg should be mono
@@ -201,6 +205,7 @@ class Class_Analysis1(object):
         Y1b = int( self.fig_image.shape[0] *  (Y1 / self.img0.get_extent()[3]) )
         
         self.fig_image_sub= self.fig_image[Y0b:Y1b,X0b:X1b,:]
+        self.template_pos=[X0b, X1b, Y0b, Y1b]
         
         if Disp0:
             print ( 'X0b, X1b, Y0b, Y1b', X0b, X1b, Y0b, Y1b)
@@ -211,7 +216,58 @@ class Class_Analysis1(object):
             plt.imshow( self.fig_image_sub, origin='lower')
             plt.show()
         
-    def match_template(self, template=None, Disp0=False):
+        
+    def vlimit_result(self, positions, delta_x=0.2):  # =0.333):
+        # limit to match of time in the range (x-axis)
+        w= self.template_pos[1] - self.template_pos[0]
+        dw= int(w * delta_x)
+        x0bmin = self.template_pos[0] - dw
+        x0bmax = self.template_pos[0] + dw
+        #print ('self.template_pos', self.template_pos)
+        print ('limit to match of time in the range (x-axis) of ', x0bmin, x0bmax)
+        limit_pos_index= np.where( (positions[1] >= x0bmin) & (positions[1] <= x0bmax) )
+        pos2= np.array(positions)
+        vl_positions= [ (pos2[0][limit_pos_index]), (pos2[1][limit_pos_index])]
+        
+        return vl_positions
+        
+    def flimit_result(self, positions, delta_y=0.01):  # =0.333):
+        # limit to match of frequency  (y-axis) more than ...
+        h= self.template_pos[3] - self.template_pos[2]
+        dh= int(h * delta_y)
+        y0bmin = self.template_pos[2] - dh
+        y0bmax = self.template_pos[2] + dh
+        #print ('self.template_pos', self.template_pos)
+        print ('limit to match of frequency  (y-axis) more than ', y0bmin)
+        limit_pos_index= np.where( positions[0] >= y0bmin )
+        pos2= np.array(positions)
+        fl_positions= [ (pos2[0][limit_pos_index]), (pos2[1][limit_pos_index])]
+        
+        return fl_positions
+        
+    def rlimit(self,boxes, score, TOP_number=5):
+        # limit to top rank xxx only
+        #print('boxes.shape', boxes.shape)  # boxes.shape (1, 4)
+        #print('score', score)
+        boxes_top=[]
+        score_top=[]
+        
+        for i in range ( min([ boxes.shape[0],TOP_number]) ):
+            boxes_top.append( boxes[i])
+            score_top.append( score[i])
+        
+        boxes_top=np.array( boxes_top)
+        score_top=np.array( score_top)
+        #print('boxes_top.shape', boxes_top.shape)  # boxes.shape (1, 4)
+        #print('score_top', score_top)        
+        
+        if min([ boxes.shape[0],TOP_number]) < boxes.shape[0]:
+            print ('limit to top rank only ', TOP_number)
+        
+        return boxes_top, score_top
+    	
+        
+    def match_template(self, template=None, ratio=0.88, Disp0=False):
         image= np.array( self.fig_image, dtype=np.uint8)
         if template is None:
             template= np.array( self.fig_image_sub, dtype=np.uint8)
@@ -226,6 +282,7 @@ class Class_Analysis1(object):
         if Disp0:
             print ('minVal, maxVal, minLoc, maxLoc', self.minVal, self.maxVal, self.minLoc, self.maxLoc)
         
+        # save maxVal as fig_image_match
         X0c= self.maxLoc[0]
         Y0c= self.maxLoc[1]
         X1c= X0c + template.shape[1]
@@ -234,8 +291,48 @@ class Class_Analysis1(object):
         
         if Disp0:
            print ( 'X0c, X1c, Y0c, Y1c', X0c, X1c, Y0c, Y1c)
-           #print ( 'shapes', template.shape, self.fig_image_match.shape)
-    
+        
+        # overwrite ratio
+        #ratio = 0.88
+        threshold0 = self.minVal + (self.maxVal - self.minVal) * ratio
+        positions = np.where(result >= threshold0)
+        
+        if 1:  # limit to match of time
+            positions= self.vlimit_result( positions)
+            
+        if 1:  # limit to match of frequency 
+            positions= self.flimit_result( positions)
+        
+        scores = result[tuple(positions)]
+        
+        # Non Maximum Suppression
+        boxes = []
+        h, w = template.shape[:2]
+        for y, x in zip(*positions):
+            boxes.append([x, y, x + w - 1, y + h - 1])
+        boxes = np.array(boxes)
+        print('boxes.shape', boxes.shape) 
+        
+        boxes, selected_score = non_max_suppression(boxes, probs=scores, overlapThresh=0.6)
+        
+        
+        # limit to top rank
+        boxes, selected_score= self.rlimit( boxes, selected_score)
+        
+        # stack match result 
+        self.boxes_previous = boxes.copy()
+        self.boxes_previous_score = selected_score.copy()
+        
+        
+    def add_patch1(self,):
+        if self.boxes_previous is not None:
+            #print (' try to draw self.boxes_previous')
+            for box in self.boxes_previous:
+                x, y = box[:2]
+                w, h = box[2:] - box[:2] + 1
+                self.ax.add_patch(patches.Rectangle((x, y), w, h, linewidth=1, edgecolor='green', fill=None))
+        
+        
     def onclick(self,event):
         # mouse control
         if 0:
@@ -245,6 +342,18 @@ class Class_Analysis1(object):
         self.x0= event.xdata # - self.img0.get_extent()[0])
         self.y0= event.ydata # - self.img0.get_extent()[2])
         
+        # call match_template via mouse right click
+        if event.button == 3:
+            self.match_template()
+            self.add_patch1()
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+            
+            # reset mouse position 
+            self.x0=-1
+            
+            return None
+        
         if self.x1 > 0:
             X0= min([self.x0, self.x1])
             X1= max([self.x0, self.x1])
@@ -252,6 +361,10 @@ class Class_Analysis1(object):
             Y1= max([self.y0, self.y1])
             r = patches.Rectangle(xy=(X0, Y0), width= (X1-X0), height= (Y1-Y0) , ec='r', fill=False)
             self.ax.add_patch(r)
+            
+            # draw previous select as green
+            self.add_patch1()
+            
             self.fig.canvas.draw()
             self.fig.canvas.flush_events()
             [p.remove() for p in reversed(self.ax.patches)]
@@ -260,11 +373,11 @@ class Class_Analysis1(object):
             self.y0=-1
             
             self.show_fig2(X0,X1,Y0,Y1, ShowEnable=False)
-
-
+            
+            
         else:  # clear
-            self.fig.canvas.draw()
-            self.fig.canvas.flush_events()
+            pass
+            
             
     def onkey(self,event):
         # Key control 
@@ -277,7 +390,12 @@ class Class_Analysis1(object):
         # call match_template
         elif event.key == 'm':
             self.match_template()
-        
+            self.add_patch1()
+            self.fig.canvas.draw()
+            self.fig.canvas.flush_events()
+                    
+            # reset mouse position 
+            self.x0=-1
         
         sys.stdout.flush()
     
@@ -321,28 +439,21 @@ def save_wav( path0, data, sr=44100):
 
 if __name__ == '__main__':
     #
-    parser = argparse.ArgumentParser(description='Compare matching portion of two spectrograms and show its difference')
-    parser.add_argument('--wav_file_template', '-t', default='wav/sample-for-study-short2.wav', help='template wav file name(16bit)')
-    parser.add_argument('--wav_file_matching', '-m', default='wav/sample-for-study-short2-output-rtwdf.wav', help='matching wav file name(16bit)')
+    parser = argparse.ArgumentParser(description='Search some similar area near the specified area in Spectrogram')
+    parser.add_argument('--wav_file', '-w', default='wav/sample-for-study-short2.wav', help='wav file name(16bit)')
     args = parser.parse_args()
     
-    path0= args.wav_file_template
-    path1= args.wav_file_matching
+    path0= args.wav_file
     
     # load compared two wav files
     yg0,sr0=load_wav( path0)
-    yg1,sr1=load_wav( path1)
     
     # instance
     Ana0= Class_Analysis1(num_band=1024, fmin=40, fmax=8000, sr=sr0)
-    Ana1= Class_Analysis1(num_band=1024, fmin=40, fmax=8000, sr=sr1)
     
     # process
     yo0= Ana0.compute(yg0)
-    yo1= Ana1.compute(yg1)
     
     # draw image
+    # Specify the area and then search similar area
     Ana0.plot_image() #yg=yg)
-    Ana1.plot_image(template = Ana0.fig_image_sub)
-    
-    

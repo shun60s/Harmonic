@@ -17,6 +17,7 @@
 - iir1.py iir butterworth filter
 - mel.py mel-frequency equal shifted list
 - compare_spectrograms1.py main program, compare matching portion of two spectrograms and show its difference
+- search_similar_area1.py main program, search some similar area near the specified area in spectrogram
 - in the wav folder, there are used wav files.  
 
 
@@ -52,3 +53,18 @@ each matching portion of template spectrogram and matching spectrogram
 
 matching portion and its difference (red means positive  and blue means negative)    
 ![figure_input7](doc/diff.png)  
+
+
+## Search some similar area near the specified area in spectrogram  
+
+Specify the area as diagonal position by pointing-device mouse. And then, click right mouse button or press m on keyboard.  
+![figure_input8](doc/similar_areas.png)  
+
+
+## license  
+
+MIT  
+
+Regarding to nms.py, please refer copyright and license notice in the content.  
+
+
