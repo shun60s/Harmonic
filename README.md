@@ -61,7 +61,7 @@ Specify the area as diagonal position by pointing-device mouse. And then, click 
 ![figure_input8](doc/similar_areas.png)  
 
 
-## license  
+## License  
 
 MIT  
 
