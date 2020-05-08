@@ -1,5 +1,10 @@
 #  BPF bank analysis Spectrogram  
-
+    
+Spectrogram analysis of Tube Amplifier Distortion (PC simulation)  
+   
+[github repository](https://github.com/shun60s/Harmonic/)  
+  
+  
 ## feature  
 
 - BPF's target response is 2nd harmonic level less than -70dB
