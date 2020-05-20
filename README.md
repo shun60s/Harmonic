@@ -23,6 +23,7 @@ Spectrogram analysis of Tube Amplifier Distortion (PC simulation)
 - mel.py mel-frequency equal shifted list
 - compare_spectrograms1.py main program, compare matching portion of two spectrograms and show its difference
 - search_similar_area1.py main program, search some similar area near the specified area in spectrogram
+- Spectrogram_2D-FFT.py main program, show Spectrogram, 2D inverse FFT, and 2D FFT of the spectrogram
 - in the wav folder, there are used wav files.  
 
 
@@ -64,6 +65,13 @@ matching portion and its difference (red means positive  and blue means negative
 
 Specify the area as diagonal position by pointing-device mouse. And then, click right mouse button or press m on keyboard.  
 ![figure_input8](doc/similar_areas.png)  
+
+
+## Spectrogram, 2D FFT, and 2D inverse FFT
+
+In the following figure, from top to bottom, spectrogram, 2D inverse FFT of red rectangle in 2D FFT, and 2D FFT of the spectrogram.  
+
+![figure_input9](doc/2D-FFT-2D-IFFT.png)  
 
 
 ## License  
