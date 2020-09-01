@@ -27,10 +27,10 @@ from nms import *
 
 # Check version
 #  Python 3.6.4 on win32 (Windows 10)
-#  numpy 1.16.3
-#  matplotlib  2.1.1
+#  numpy 1.18.4
+#  matplotlib  3.3.1
 #  scipy 1.4.1
-#  opencv-python (3.4.0.12)
+#  opencv-python (3.4.6)
 
 class Class_Analysis1(object):
     def __init__(self, num_band=1024, fmin=40, fmax=8000, sr=44100, Q=40.0, \
@@ -112,6 +112,13 @@ class Class_Analysis1(object):
         
         return rgb_fig
     
+    def conv_int255(self, in_fig):
+        # matplotllib imshow x format was changed from version 2.x to version 3.x
+        if 1:  # matplotlib > 3.x
+            return np.array(np.abs(in_fig - 255), np.int)
+        else:  # matplotlib = 2.x
+            return in_fig
+    
     def plot_image(self, yg=None, LabelOn= True, template=None ):
         #
         self.fig_image= self.conv_gray2RGBgray( self.trans_gray(self.out1))
@@ -160,7 +167,7 @@ class Class_Analysis1(object):
             ax.set_yticks( yflens )
             ax.set_yticklabels( char_flens)
         
-        self.img0= ax.imshow( self.fig_image, aspect='auto', origin='lower')
+        self.img0= ax.imshow( self.conv_int255(self.fig_image), aspect='auto', origin='lower')
         
         cid =  fig.canvas.mpl_connect('button_press_event', self.onclick)  # mouse
         cid2 = fig.canvas.mpl_connect('key_press_event',   self.onkey)  #  keyboard
@@ -170,8 +177,8 @@ class Class_Analysis1(object):
 
     def show_comparison(self,):
         fig,  [ax0, ax1] = plt.subplots(1, 2)
-        ax0.imshow( self.fig_image_template, origin='lower')
-        ax1.imshow( self.fig_image_match,    origin='lower')
+        ax0.imshow( self.conv_int255(self.fig_image_template), origin='lower')
+        ax1.imshow( self.conv_int255(self.fig_image_match),    origin='lower')
         ax0.set_title('fig_image_template')
         ax1.set_title('fig_image_match')
         plt.tight_layout()
@@ -190,7 +197,7 @@ class Class_Analysis1(object):
         fig,  [ax0, ax1] = plt.subplots(1, 2)
         # seismic and bwr are center value is white 
         ax1.imshow( diff0xc, aspect='auto', origin='lower', cmap=plt.cm.seismic, norm=Normalize(vmin=0, vmax=1))  # plt.cm.bwr, #plt.cm.jet )
-        ax0.imshow( self.fig_image_match,  aspect='auto',  origin='lower')
+        ax0.imshow( self.conv_int255(self.fig_image_match),  aspect='auto',  origin='lower')
         ax1.set_title('diff (negative-blue, positive-red)')
         ax0.set_title('fig_image_match')
         plt.tight_layout()
@@ -213,7 +220,7 @@ class Class_Analysis1(object):
         
         if ShowEnable :
             plt.figure()
-            plt.imshow( self.fig_image_sub, origin='lower')
+            plt.imshow( self.conv_int255(self.fig_image_sub), origin='lower')
             plt.show()
         
         

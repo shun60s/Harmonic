@@ -30,7 +30,7 @@ from Compressor1 import *
 # Check version
 #  Python 3.6.4 on win32 (Windows 10)
 #  numpy 1.18.4
-#  matplotlib  2.1.1
+#  matplotlib  3.3.1
 #  scipy 1.4.1
 
 
@@ -118,6 +118,13 @@ class Class_Analysis1(object):
         
         return self.rgb_fig
     
+    def conv_int255(self, in_fig):
+        # matplotllib imshow x format was changed from version 2.x to version 3.x
+        if 1:  # matplotlib > 3.x
+            return np.array(np.abs(in_fig - 255), np.int)
+        else:  # matplotlib = 2.x
+            return in_fig
+    
     def plot_image(self, yg=None, LabelOn= True):
         #
         self.fig_image= self.conv_gray2RGBgray( self.trans_gray(self.out1))
@@ -161,7 +168,7 @@ class Class_Analysis1(object):
             ax.set_yticks( yflens )
             ax.set_yticklabels( char_flens)
         
-        self.img0= ax.imshow( self.fig_image, aspect='auto', origin='lower')
+        self.img0= ax.imshow( self.conv_int255(self.fig_image), aspect='auto', origin='lower')
         
         cid =  fig.canvas.mpl_connect('button_press_event', self.onclick)  # mouse
         cid2 = fig.canvas.mpl_connect('key_press_event',   self.onkey)  #  keyboard
@@ -245,7 +252,7 @@ class Class_Analysis1(object):
             self.ax2=ax2
             self.x0b=-1
             self.y0b=-1
-            ax1.imshow( self.fig_image_sub, origin='lower')
+            ax1.imshow( self.conv_int255(self.fig_image_sub), origin='lower')
             
             self.compute_FFT2D()
             self.img2= ax2.imshow( self.mag_norm , cmap = 'gray',  origin='lower')
@@ -268,10 +275,10 @@ class Class_Analysis1(object):
         if ShowEnable :
             #
             fig3,  [ax1, ax2, ax3] = plt.subplots(3, 1)
-            ax1.imshow( self.fig_image_sub, origin='lower')
+            ax1.imshow( self.conv_int255(self.fig_image_sub), origin='lower')
             
             self.compute_IFFT2D( XY=XYb )
-            ax2.imshow( self.mag2_norm, origin='lower')
+            ax2.imshow( self.conv_int255(self.mag2_norm), origin='lower')
             
             ax3.imshow( self.mag_norm, cmap='gray', origin='lower')
             # show selected area in Fig 2

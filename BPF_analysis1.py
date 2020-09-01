@@ -23,8 +23,8 @@ from Compressor1 import *
 
 # Check version
 #  Python 3.6.4 on win32 (Windows 10)
-#  numpy 1.16.3
-#  matplotlib  2.1.1
+#  numpy 1.18.4
+#  matplotlib  3.3.1
 #  scipy 1.4.1
 
 class Class_Analysis1(object):
@@ -83,6 +83,13 @@ class Class_Analysis1(object):
         
         return rgb_fig
     
+    def conv_int255(self, in_fig):
+        # matplotllib imshow x format was changed from version 2.x to version 3.x
+        if 1:  # matplotlib > 3.x
+            return np.array(np.abs(in_fig - 255), np.int)
+        else:  # matplotlib = 2.x
+            return in_fig
+    
     def plot_image(self, yg=None):
         #
         fig_image= self.conv_gray2RGBgray( self.trans_gray(self.out1))
@@ -114,7 +121,7 @@ class Class_Analysis1(object):
         ax.set_yticks( yflens )
         ax.set_yticklabels( char_flens)
         
-        ax.imshow( fig_image, aspect='auto', origin='lower')
+        ax.imshow( self.conv_int255(fig_image), aspect='auto', origin='lower')
         
         plt.tight_layout()
         plt.show()
