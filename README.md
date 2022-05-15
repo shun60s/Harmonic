@@ -24,6 +24,7 @@ Spectrogram analysis of Tube Amplifier Distortion (PC simulation)
 - compare_spectrograms1.py main program, compare matching portion of two spectrograms and show its difference
 - search_similar_area1.py main program, search some similar area near the specified area in spectrogram
 - Spectrogram_2D-FFT.py main program, show Spectrogram, 2D inverse FFT, and 2D FFT of the spectrogram
+- stereo_channel_matching.py main program, search some similar area to the specified area in another channel spectrogram 
 - in the wav folder, there are used wav files.  
 
 
@@ -72,6 +73,15 @@ Specify the area as diagonal position by pointing-device mouse. And then, click 
 In the following figure, from top to bottom, spectrogram, 2D inverse FFT of red rectangle in 2D FFT, and 2D FFT of the spectrogram.  
 
 ![figure_input9](doc/2D-FFT-2D-IFFT.png)  
+
+
+## Search some similar area to the specified area in another channel spectrogram  
+
+
+Load stero(2 channel) wav file and make Spectrogram per each channel (show Figure 1 and Figure 2).  
+Search some similar area to the specified area in another channel.  
+Specify the area as diagonal position by pointing-device mouse. And then, click right mouse button or press m on keyboard.  
+![figure_input10](doc/stereo_matching.png)  
 
 
 ## License  
