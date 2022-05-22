@@ -83,6 +83,11 @@ Search some similar area to the specified area in another channel.
 Specify the area as diagonal position by pointing-device mouse. And then, click right mouse button or press m on keyboard.  
 ![figure_input10](doc/stereo_matching.png)  
 
+After above completed, then press c on keyboard. It will compute difference between both channel, after time correction.  
+![figure_input11](doc/channel_difference.png)  
+Peak or bottom in the difference, frequency characteristic between channels, is significant, because real signal is available at the point to be compared.  
+
+
 
 ## License  
 

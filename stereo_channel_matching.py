@@ -1,8 +1,9 @@
 #coding:utf-8
 
-#  
+#
 #  Load stero(2 channel) wav file and make Spectrogram per each channel (show Figure 1 and Figure 2).
 #  Search some similar area to the specified area (by mouse on the Spectrogram) in another channel.
+#  and compute difference between both channel, after time correction.
 #
 #  BPF bank analysis Spectrogram of which feature are
 #   BPF's target response is 2nd harmonic level less than -70dB
@@ -22,6 +23,7 @@ from scipy.io.wavfile import write as wavwrite
 from matplotlib import pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.colors import Normalize
+from mpl_toolkits.mplot3d import Axes3D
 import cv2
 
 from mel  import *
@@ -358,6 +360,8 @@ class Class_Analysis1(object):
                 self.ax.add_patch(patches.Rectangle((x, y), w, h, linewidth=1, edgecolor='green', fill=None))
                 
                 # show position, channel difference
+                self.list_x_diff=[]
+                self.list_y_diff=[]
                 if 1:
                     print ('position : x,y,w,h', x,y,w,h)
                     if self.ch ==0:
@@ -365,6 +369,8 @@ class Class_Analysis1(object):
                         ya= Ana1.fig_sub_y
                         wa= Ana1.fig_sub_w
                         ha= Ana1.fig_sub_h
+                        self.list_x_diff.append( x-xa)
+                        self.list_y_diff.append( y-ya)
                         print ('channel difference :', (x-xa),(y-ya),(w-wa),(h-ha))
                         print ('channel difference time of x-axis [sec]',(x-xa) / (self.sr / self.dsf))
                     elif self.ch ==1:
@@ -372,10 +378,13 @@ class Class_Analysis1(object):
                         ya= Ana0.fig_sub_y
                         wa= Ana0.fig_sub_w
                         ha= Ana0.fig_sub_h
+                        self.list_x_diff.append( x-xa)
+                        self.list_y_diff.append( y-ya)
                         print ('channel difference :', (x-xa),(y-ya),(w-wa),(h-ha))
                         print ('channel difference time of x-axis [sec]',(x-xa) / (self.sr / self.dsf))
                     
                     print ("")
+                    #print ("ch", self.ch)
         
         
     def onclick(self,event):
@@ -435,7 +444,7 @@ class Class_Analysis1(object):
     def onkey(self,event):
         # Key control 
         if not ((event.xdata is None) or (event.ydata is None)):
-            print('you pressed', event.key, event.xdata, event.ydata)
+            print('you pressed (ch)', event.key, event.xdata, event.ydata, self.ch)
         
         # clean
         if event.key == 'q':
@@ -453,14 +462,115 @@ class Class_Analysis1(object):
             else:
                 print ('error: self.ch is miss.')
         
+        # compute difference between both channel, after time correction.
+        elif event.key == 'c':  # Attension: Use 'c', after 'm' was done
+           if len(self.list_x_diff) > 0:
+               xd= int(self.list_x_diff[0])
+               if self.ch == 0:
+                   if xd >= 0 :  # ch0 is delay
+                       x1=self.fig_image[:,xd:, :] 
+                       x2=Ana1.fig_image[:,0:-xd:, :] # Warning: this use global name Ana1
+                   else:  # ch0 is faster
+                       x1=self.fig_image[:,0:-int(abs(xd)):, :]
+                       x2=Ana1.fig_image[:,int(abs(xd)):, :]
+               elif self.ch == 1:
+                   if xd >= 0 :  # ch1 is delay
+                       x1=self.fig_image[:,xd:, :] 
+                       x2=Ana0.fig_image[:,0:-xd:, :] # Warning: this use global name Ana0
+                   else:  # ch1 is faster
+                       x1=self.fig_image[:,0:-int(abs(xd)):, :]
+                       x2=Ana0.fig_image[:,int(abs(xd)):, :]
+               else:
+                   print ('error: self.ch is miss.')
+               
+               
+               
+               y_diff=np.subtract(x1, x2) 
+               #print ('y_diff.shape', y_diff.shape)
+               y_diff_m = np.mean( y_diff, axis=1)
+               #print ('y_diff_m.shape', y_diff_m.shape)
+
+               fig,  [ax0, ax1, ax2] = plt.subplots(1, 3)
+               
+               flens=[self.fmin, 300, 1000, 3000,  self.fmax]
+               yflens,char_flens= self.mel.get_postion( flens)
+               
+               xlen_t=x1.shape[1]
+               slen=xlen_t / ( self.sr/ self.dsf)
+               char_slen=str( int(slen*1000) / 1000) # ms
+               char_slen2=str( int((slen/2)*1000) / 1000) # ms
+               
+               ax0.imshow( self.conv_int255(x1), aspect='auto', origin='lower')
+               ax1.imshow( self.conv_int255(x2), aspect='auto', origin='lower')
+               ax0.set_yticks( yflens )
+               ax0.set_yticklabels( char_flens)
+               ax1.set_yticks( yflens )
+               ax1.set_yticklabels( char_flens)
+               ax0.set_xticks([0,int(xlen_t/2)-1, xlen_t-1])
+               ax0.set_xticklabels(['0', char_slen2, char_slen])
+               ax1.set_xticks([0,int(xlen_t/2)-1, xlen_t-1])
+               ax1.set_xticklabels(['0', char_slen2, char_slen])
+               
+               #
+               ax2.plot(y_diff_m[:,0]) # just  R in RGB
+               ax2.grid(which='both', axis='both')
+               ax2.set_xticks( yflens )
+               ax2.set_xticklabels( char_flens)
+               #
+               if self.ch == 0:
+                   ax0.set_title('ch0')
+                   ax1.set_title('ch1')
+                   ax2.set_title('ch1-ch0 ave')
+               elif self.ch == 1:
+                   ax0.set_title('ch1')
+                   ax1.set_title('ch0')
+                   ax2.set_title('ch0-ch1 ave')
+               else:
+                   print ('error: self.ch is miss.')
+               
+               plt.tight_layout()
+               plt.show()
+               
+               
+               ### 3D plot
+               #print ('y_diff.shape', y_diff.shape)
+               x = np.arange(0,  y_diff.shape[1] , 1) / (self.sr / self.dsf) # ex:20
+               y = np.arange(0,  y_diff.shape[0] , 1)  # ex:10
+               X, Y = np.meshgrid(x, y)                # X.Y.shape(10,20)
+               fig3d = plt.figure()
+               ax3d = fig3d.add_subplot(111, projection='3d')
+               #ax3d.plot_wireframe(X,Y,y_diff[:,:,0])   # just  R in RGB
+               ax3d.plot_surface(X,Y,y_diff[:,:,0], cmap='summer')   # just  R in RGB
+               ax3d.set_yticks( yflens )
+               ax3d.set_yticklabels( char_flens)
+               ax3d.set_ylabel('frequency[Hz]')
+               ax3d.set_xlabel('time[sec]')
+               if self.ch == 0:
+                   ax3d.set_zlabel('ch1-ch0')
+               elif self.ch == 1:
+                   ax3d.set_zlabel('ch0-ch1')
+               else:
+                   print ('error: self.ch is miss.')
+                   
+               #plt.tight_layout()
+               plt.show()
+               
+           
+           else:
+                print ('self.list_x_diff',self.list_x_diff)
+        
+        
         
         sys.stdout.flush()
     
     
     def crosee_channel_match_template(self,):
         #
+        
         # set another Figure fig_image_sub as template
             if self.ch == 0:
+                self.list_x_diff=[]
+                Ana1.list_x_diff=[]
                 try:
                     self.match_template(template=Ana1.fig_image_sub )     # Warning: this use global name Ana1
                 except:
@@ -473,7 +583,11 @@ class Class_Analysis1(object):
                     [p.remove() for p in reversed(self.ax.patches)]
                     # reset mouse position 
                     self.x0=-1
+                    # copy x_diff to another channel
+                    Ana1.list_x_diff= np.array(self.list_x_diff) * -1
             elif self.ch == 1:
+                self.list_x_diff=[]
+                Ana0.list_x_diff=[]
                 try:
                     self.match_template(template=Ana0.fig_image_sub )    # Warning: this use global name Ana0
                 except:
@@ -486,6 +600,8 @@ class Class_Analysis1(object):
                     [p.remove() for p in reversed(self.ax.patches)]
                     # reset mouse position 
                     self.x0=-1
+                    # copy x_diff to another channel
+                    Ana0.list_x_diff= np.array(self.list_x_diff) * -1
             else:
                 print ('error: self.ch is miss.')
     
@@ -532,8 +648,8 @@ def save_wav( path0, data, sr=44100):
 if __name__ == '__main__':
     #
     parser = argparse.ArgumentParser(description='Search some similar area to the specified area in another channel Spectrogram')
-    parser.add_argument('--wav_file', '-w', default='wav/9400.wav', help='wav file name(16bit) stereo')
-    parser.add_argument('--dir', '-d', default=None, help='specify input wav directory. This is alternative of --output_wav')
+    parser.add_argument('--wav_file', '-w', default='wav/9400.wav', help='input wav file name(16bit) stereo')
+    parser.add_argument('--dir', '-d', default=None, help='specify input wav directory. This is alternative of --wav_file')
     args = parser.parse_args()
     
     #
@@ -567,4 +683,4 @@ if __name__ == '__main__':
         # Specify the area and then search similar area
         Ana0.plot_image( plotshow=False) #yg=yg)
         Ana1.plot_image( plotshow=True) #yg=yg)
-            
+
