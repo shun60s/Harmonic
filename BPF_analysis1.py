@@ -115,7 +115,8 @@ class Class_Analysis1(object):
         
         # draw frequecny value
         ylen=fig_image.shape[0]
-        flens=[self.fmin, 300, 1000, 3000,  self.fmax]
+        flens=[self.fmin, 100, 200, 300, 500,700, 1000,1500, 2000, 2500, 3000, 3500, 4000, 5000,6000, self.fmax]
+        #flens=[self.fmin, 300, 1000, 3000,  self.fmax]
         # flens=[self.fmin, 300, 600, 1000, 1400, 2000, 3000,  self.fmax] # forMix_400Hz1KHz-10dB_44100Hz_400msec_TwoTube_mono.wav
         yflens,char_flens= self.mel.get_postion( flens)
         ax.set_yticks( yflens )
