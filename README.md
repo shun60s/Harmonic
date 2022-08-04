@@ -88,6 +88,11 @@ After above completed, then press c on keyboard. It will compute difference betw
 Peak or bottom in the difference, frequency characteristic between channels, is significant, because real signal is available at the point to be compared.  
 
 
+## Accentuate ridge of local peak in lower frequency  
+
+BPF_analysis2.py was added simple moving average until 800Hz signal to accentuate ridge of local peak.  
+![figure_input12](doc/a1_SMA_OFF_ON.png)  
+
 
 ## License  
 
